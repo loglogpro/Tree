@@ -2,8 +2,7 @@
 namespace Utils;
 
 /**
- * Organiza a lista proveniente do banco de dados representando a hierarquia
- * definida pelo item parent 
+ * Organize the a list in herarchical form
  *
  * @author Rafael Nexus
  **/
@@ -38,21 +37,6 @@ class Tree {
     protected $_keyName = 'id';
 
     /**
-     * Constructor 
-     *
-     * @return void
-     * @param array $categories
-     * @author Rafael Nexus
-     **/
-    public function __construct(array $treeList) 
-    {
-        //set the raw categories list
-        $this->_rawTree = $treeList;
-        //keep the organized tree
-        $this->_tree = $this->_organize();
-    }
-
-    /**
      * Organize the raw tree and construct the hierarchy
      *
      * @return associative array
@@ -79,7 +63,7 @@ class Tree {
      * Select the children from the raw tree
      *
      * @return associative array
-     * @parent string|integer $parent
+     * @parent string | integer $parent
      * @author Rafael Nexus
      **/
     protected function _getChildren($parent)
@@ -93,15 +77,16 @@ class Tree {
     }
 
     /**
-     * Output the tree based on a provided template
+     * Simple helper to output the tree based on a provided template
      *
-     * @return void
+     * @return string
      * @param string $template
+     * @param array $context
      * @author Rafael Nexus
      **/
-    public function printTree($template, $context = false)
+    public function printTree($template, $context = array())
     {
-        if ($context === false)
+        if ($context === array())
             $context = $this->_tree;
 
         $pattern = '/\%([a-z0-9]+)/i';
@@ -127,26 +112,77 @@ class Tree {
         return $children; 
     }
 
+    /**
+     * Set the raw list
+     *
+     * @return void
+     * @param array $list
+     * @author Rafael Dias
+     **/
+    public function setTree($treeList)
+    {
+        if (empty($treeList) || !is_array($treeList)) {
+            throw new \Exception(__FUNCTION__ . " is expecting array, and " . gettype($treeList) . " given" );
+        }
+
+        //set the raw categories list
+        $this->_rawTree = $treeList;
+        //keep the organized tree
+        $this->_tree = $this->_organize();    
+    }
+
+    /**
+     * Get the organized tree
+     *
+     * @return array
+     * @author Rafael Nexus
+     **/
     public function getTree()
     {
         return $this->_tree;        
     }
 
+    /**
+     * Get the keyName value
+     *
+     * @return string
+     * @author Rafael Nexus
+     **/
     public function getKeyName()
     {
         return $this->_keyName;
     }
 
+    /**
+     * Get the parentName value
+     *
+     * @return string
+     * @author Rafael Nexus
+     **/
     public function getParentName()
     {
         return $this->_parentName;
     }
 
+    /**
+     * set the parentName value
+     *
+     * @return void
+     * @param string $parentName
+     * @author Rafael Nexus
+     **/
     public function setParentName($parentName) 
     {
         $this->_parentName = $parentName;
     }
 
+    /**
+     * Set the keyName value
+     *
+     * @return void
+     * @param string $keyName
+     * @author Rafael Nexus
+     **/
     public function setKeyName($keyName) 
     {
         $this->_keyName = $keyName;
