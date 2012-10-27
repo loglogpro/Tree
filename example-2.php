@@ -31,6 +31,7 @@ $list = array(
     );
 
 //instantiate the class, passing the list as parameter
-$Tree = new \Utils\Tree($list);
+$Tree = new \Utils\Tree;
+$Tree->setTree($list);
 //get the organized tree
 echo '<pre>' . nl2br(print_r($Tree->getTree(),true)) . '</pre>';

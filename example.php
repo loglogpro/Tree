@@ -31,7 +31,8 @@ $list = array(
     );
 
 //instantiate the class, passing the list as parameter
-$Tree = new \Utils\Tree($list);
+$Tree = new \Utils\Tree;
+$Tree->setTree($list);
 //set a template that will be used to print the three
 $template = "<li><label><input type='checkbox' name='cat[]' value='%id'/>%name </label> <ul>%_callback</ul></li>";
 //print the tree
