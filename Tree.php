@@ -6,185 +6,112 @@ namespace Utils;
  *
  * @author Rafael Nexus
  **/
-class Tree {
+class Tree extends \RecursiveArrayIterator {
 
     /**
      * Property to hold the original raw value of the list
      *
      * @var array
      **/
-    protected $_rawTree;
+    protected $_rawList;
 
     /**
-     * Organized categories in tree
+     * Pointers to the whole tree, can access specific nodes by $_keyName
      *
      * @var array
      **/
-    protected $_tree;
+    protected $_pointers;
 
     /**
      * Name of the key that contains the parent item information
      *
      * @var string
      **/
-    protected $_parentName = 'parent';
+    protected $_parentName;
 
     /**
      * Name of the key that contains the key information
      *
      * @var string
      **/
-    protected $_keyName = 'id';
+    protected $_keyName;
 
     /**
-     * Organize the raw tree and construct the hierarchy
-     *
-     * @return associative array
-     * @param integer $parent 
-     * @author Rafael Nexus
-     **/
-    protected function _organize($parent = 0)
-    {
-        //gets all the children from the raw tree
-        $selectedChildren = $this->_getChildren($parent);
-
-        $children = array();
-
-        foreach ($selectedChildren as $key => $cat)
-            $children[$cat[$this->_keyName]] = 
-                array('index'    => $key,
-                      'content'  => $cat,
-                      'children' => $this->_organize($cat[$this->_keyName]));
-
-        return $children; 
-    }
-
-    /**
-     * Select the children from the raw tree
-     *
-     * @return associative array
-     * @parent string | integer $parent
-     * @author Rafael Nexus
-     **/
-    protected function _getChildren($parent)
-    {
-        $selectedChildren = array();
-        foreach ($this->_rawTree as $k=>$v) 
-            if ($v[$this->_parentName] == $parent)
-                $selectedChildren[$k] = $v;
-
-        return $selectedChildren;
-    }
-
-    /**
-     * Simple helper to output the tree based on a provided template
-     *
-     * @return string
-     * @param string $template
-     * @param array $context
-     * @author Rafael Nexus
-     **/
-    public function printTree($template, $context = array())
-    {
-        if ($context === array())
-            $context = $this->_tree;
-
-        $pattern = '/\%([a-z0-9]+)/i';
-        preg_match_all($pattern, $template, $matches);
-        $search = $matches[0];              
-        $matches = array_fill_keys($matches[1],'');
-        $children = '';
-
-        foreach ($context as $key => $value) {
-
-            $replace = array_merge(
-                $matches,
-                array_intersect_key($value['content'], $matches)
-            ); 
-
-            $search[] = '%_callback'; 
-            $replace[] = (!empty($value['children']))?
-                $this->printTree($template,$value['children']) : false;
-
-            $children .= str_replace($search,$replace,$template);
-        }
-
-        return $children; 
-    }
-
-    /**
-     * Set the raw list
+     * Constructor
      *
      * @return void
      * @param array $list
-     * @author Rafael Dias
-     **/
-    public function setTree($treeList)
+     * @param mixed (string|integer) $keyName
+     * @param mixed (string|integer) $parentName
+     * @author Rafael Nexus <n3xu5.0@gmail.com>
+     */
+    public function __construct(Array $list, $keyName = 'id', $parentName = 'parent')
     {
-        if (empty($treeList) || !is_array($treeList)) {
-            throw new \Exception(__FUNCTION__ . " is expecting array, and " . gettype($treeList) . " given" );
+        $this->_rawList = $list;
+        $this->_keyName = $keyName;
+        $this->_parentName = $parentName;
+
+        parent::__construct($this->_organize());
+    }
+
+    /**
+     * Organize the raw list and construct the hierarchy
+     *
+     * @return void
+     * @author Rafael Nexus
+     **/
+    protected function _organize()
+    {
+        $pointers = array();
+        $return = array();
+
+        foreach ($this->_rawList as $key => $value) {
+
+            //in case the keys are not found just continue to the next item
+            if (!array_key_exists($this->_keyName, $value) || 
+                !array_key_exists($this->_parentName, $value))
+                continue;
+
+            $id = $value[$this->_keyName];
+            $parentId = $value[$this->_parentName];
+
+            //create the key on the list of pointers
+            if (!array_key_exists($id,$pointers))
+                $pointers[$id] = $value;
+
+            //if there is no parentId, is the only interaction with the actual return 
+            //array
+            if ($parentId == 0)
+                $return[$id] =& $pointers[$id];
+            else
+                $pointers[$parentId]['children'][$id] =& $pointers[$id];
         }
 
-        //set the raw categories list
-        $this->_rawTree = $treeList;
-        //keep the organized tree
-        $this->_tree = $this->_organize();    
+        $this->_pointers = $pointers;
+        return $return;
     }
 
     /**
-     * Get the organized tree
+     * Get all the pointers or a specific node by the key defined for _keyName
+     *
+     * @return void
+     * @param mixed (string|integer) $keyName
+     * @author Rafael Nexus <n3xu5.0@gmail.com>
+     */
+    public function getPointers($keyName = false)
+    {
+        return (isset($this->_pointers[$keyName]))?
+                $this->_pointers[$keyName] : $this->_pointers;
+    }
+
+    /**
+     * Return the raw list
      *
      * @return array
-     * @author Rafael Nexus
-     **/
-    public function getTree()
+     * @author Rafael Nexus <n3xu5.0@gmail.com>
+     */
+    public function getRawList()
     {
-        return $this->_tree;        
-    }
-
-    /**
-     * Get the keyName value
-     *
-     * @return string
-     * @author Rafael Nexus
-     **/
-    public function getKeyName()
-    {
-        return $this->_keyName;
-    }
-
-    /**
-     * Get the parentName value
-     *
-     * @return string
-     * @author Rafael Nexus
-     **/
-    public function getParentName()
-    {
-        return $this->_parentName;
-    }
-
-    /**
-     * set the parentName value
-     *
-     * @return void
-     * @param string $parentName
-     * @author Rafael Nexus
-     **/
-    public function setParentName($parentName) 
-    {
-        $this->_parentName = $parentName;
-    }
-
-    /**
-     * Set the keyName value
-     *
-     * @return void
-     * @param string $keyName
-     * @author Rafael Nexus
-     **/
-    public function setKeyName($keyName) 
-    {
-        $this->_keyName = $keyName;
+        return $this->_rawList;
     }
 }

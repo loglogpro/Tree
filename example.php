@@ -13,6 +13,10 @@ $list = array(
                             'name'   => 'Mobile',
                             'parent' => 1),
 
+        'Second - 2' => array('id'     => 7,
+                            'name'   => 'Sports',
+                            'parent' => 1),
+
         'Third - 2' => array('id'     => 3,
                             'name'   => 'Android',
                             'parent' => 2),
@@ -28,12 +32,31 @@ $list = array(
         'Fourth - 5' => array('id'     => 6,
                               'name'   => 'Games',
                               'parent' => 4),
+
+        'Fourth - 6' => array('id'     => 8,
+                              'name'   => 'adventure',
+                              'parent' => 6),
     );
 
 //instantiate the class, passing the list as parameter
-$Tree = new \Utils\Tree;
-$Tree->setTree($list);
-//set a template that will be used to print the three
-$template = "<li><label><input type='checkbox' name='cat[]' value='%id'/>%name </label> <ul>%_callback</ul></li>";
-//print the tree
-echo '<ul>' . $Tree->printTree($template) . '</ul>'; 
+$tree = new \Utils\Tree($list);
+
+//function building a html structure based on the data generated
+function printTree($node) {
+
+    if (!$node)
+        return false;
+
+    $return = "<ul>";
+    foreach ($node as $k=>$v) {
+        $return .= "<li>" . 
+            $v['name'] . 
+            (isset($v['children'])? printTree($v['children']) : false ).
+            "</li>";
+    }
+    $return .= "</ul>";
+
+    return $return;
+}
+
+echo printTree($tree);
